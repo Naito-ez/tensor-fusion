@@ -1,0 +1,92 @@
+# Default values for tensor-fusion.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+#This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+
+initialGpuNodeLabelSelector: "nvidia.com/gpu.present=true"
+
+controller:
+  # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+  replicaCount: 1
+
+  # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+  image:
+    repository: tensorfusion/tensor-fusion-operator
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+  # This is for setting Kubernetes Annotations to a Pod.
+  # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ 
+  podAnnotations: {}
+  tolerations: []
+  affinity: {}
+  # livenessProbe: {}
+  # readinessProbe: {}
+  # resources: {}
+  
+  admissionWebhooks:
+    failurePolicy: Fail
+    secretName: tensor-fusion-webhook-secret
+    patch:
+      image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.0
+
+greptime:
+  isCloud: false
+  host: greptimedb-standalone.greptimedb.svc.cluster.local
+  port: 4001
+  installStandalone: true
+  image:
+    repository: docker.io/greptime/greptimedb
+    tag: latest
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 100m
+    limits:
+      memory: 2Gi
+      cpu: 200m
+
+# greptime:
+#   isCloud: true
+#   host: y6lmxod4zm69.us-west-2.aws.greptime.cloud
+#   user: "dummy"
+#   db: "public"
+#   password: "dummy"
+#   port: 5001
+
+agent:
+  enrollToken: "token-from-cloud"
+  agentId: 'org-from-cloud:env'
+  cloudEndpoint: "wss://app.tensor-fusion.ai/_ws"
+  
+  image:
+    repository: tensorfusion/tensor-fusion-agent
+    tag: "latest"
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 4000m
+      memory: 2Gi
+
+# Only needed if your pool is running in Provisioned mode, and the cloud vendor doesn't support IRSA or any serviceAccount like zero-credential Auth approaches
+cloudVendorCredentials:
+  accessKey: "dummy"
+  secretKey: "dummy"
